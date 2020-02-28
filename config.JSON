@@ -1,0 +1,30 @@
+    {"eligibility_funnel": {  
+        "version": "1.0",  
+        "elec_reports": {
+            "elec_report_location": "esbos/",
+            "elec_esbos_raw": "elec_esbos_raw.xlsx",
+            "elec_month_end": "elec_month_end.xlsx",
+            "elec_previous_funnel": "previous_funnel.xlsx"
+        },
+        "funnel_lookups": {
+            "locate_lookup": "lookup/",
+            "meter_type": "meter_type.xlsx",
+            "rate_type": "rate_type.xlsx",
+            "sic_code": "sic_code.xlsx",
+            "gas_meter_size": "gas_meter_size.xlsx",
+            "tariff": "tariff.xlsx",
+            "meter_model": "meter_model.xlsx"
+        },
+        "flow_data": {
+            "locate_lookup": "flowdata/",
+            "accepted_d10": "accepted_d10.xlsx",
+            "accepted_d313": "d313_elec.xlsx",
+            "rejected_d10": "rejected_d10.xlsx",
+            "profile_data": "profile_data"
+        },
+        "elec_config" :{
+            "future_reg_date": "2019-12-31",
+            "s1_compliant_date": "2018-12-05"
+        }
+    }
+    }
