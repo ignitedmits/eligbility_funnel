@@ -1,0 +1,5 @@
+CROAAGAA  |SMSAPT    |2020-02-07-14-11-58.000000|0001|BMC       |SS        
+CROAAGAB  |1640234902394|BBC1303317301  |DumbToSmart         |2020-02-10|Daily      |U| |                                                  |NN|Unknown                                           |James Rockford                                 |2020-02-07|Telephone |Email
+CROAAGAB  |1640880902400|CBI1303317401   |DumbToSmart         |2020-02-11|Daily      |U| |                                                  |NN|Unknown                                           |Herlin Queen                                 |2020-02-07|Telephone |Email
+CROAAGAB  |1945242014434|SBI1303420901   |SmartToSmartExchange|2020-02-13|Half Hourly|Y| |                                                  |YY|Unknown                                           |Simone Wilson                                 |2020-02-07|Telephone |Text      
+CROZ9G99  |000000003

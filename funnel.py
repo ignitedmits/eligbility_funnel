@@ -1,9 +1,15 @@
+#from IPython.core.display import display, HTML
+#display(HTML("<style>.container { width:100% !important; }</style>"))
+
 import pandas as pd
 import numpy as np
 
 import compliance
 import eligibility
 import initdf
+import time
+
+from initdf import log
 
 def rejected_d10():
     global df
@@ -18,7 +24,7 @@ def rejected_d10():
     rejected_d10_frame['Rejected_D10'] = 'Yes'
     rejected_d10_frame = rejected_d10_frame.drop_duplicates(['core_mpan'])
 
-    df = pd.merge(rejected_d10_frame, how='left', on=['core_mpan', 'core_mpan'])
+    df = pd.merge(df, rejected_d10_frame, how='left', on=['core_mpan', 'core_mpan'])
     df['Rejected_D10'] = df['Rejected_D10'].fillna('No')
     del rejected_d10_frame
 
@@ -127,6 +133,8 @@ def msn_check():
     
     #print(df[['core_mpan','MSN','co_num','msn_change']])
 
+    return df['Meter Changed'].value_counts()['Yes']
+
 
 def assign_gain():
     global df
@@ -145,6 +153,8 @@ def assign_gain():
     #df = df.drop(columns='gain')
     del df_gain
 
+    return df['Gain?'].value_counts()['Yes']
+
 def get_loss():
     global df
     
@@ -156,7 +166,11 @@ def get_loss():
     df_loss = df_old.loc[(df_old['core_mpan'].isin(loss_mpan)), ['core_mpan','cust1_cust_nm', 'reg_st_dt']]
     df_loss.to_csv (r'loss_mpan.csv', index = None, header=True)
 
+    mpans_lost = df_loss.shape[0]
+
     del old_mpan, current_mpan, df_loss
+
+    return mpans_lost
 
 def reintroduce_churn_loss():
     pass
@@ -164,6 +178,8 @@ def reintroduce_churn_loss():
 
 def elec_initial_cleanse():
     global df
+
+    mpan_recs = df.shape[0]
 
     #remove nat_id
     df = df.drop(columns='nat_id')
@@ -185,24 +201,58 @@ def elec_initial_cleanse():
 
     df= df.sort_values(['core_mpan'], ascending=False)
 
-if "__init__" == "__main__":
+    return mpan_recs - df.shape[0]
 
+if __name__ == "__main__":
+    print('Entering in Python Framework.....')
+    log('Step 01/10 - Initialize Data Frames')
+
+
+    #start = time.perf_counter()
     df = initdf.init_dataframe()
+    #finish = time.perf_counter()
 
-    elec_initial_cleanse()
+    #print(f'Time Taken {finish - start} seconds')
 
-    assign_gain()
+    log('Step 02/10 - Clean-up Data')
+ 
+    dup_size = elec_initial_cleanse()
 
-    get_loss()
+    log(f'{dup_size} Duplicates removed....')
 
-    msn_check()
+    log('Step 03/10 - Assign Gain')
+
+    gain_size = assign_gain()
+
+    log(f'{gain_size} Meter Gained')
+
+    log('Step 04/10 - Get Loss MPANs')
+
+    loss_size = get_loss()
+
+    log(f'{loss_size} MPANS Lost')
+
+    log('Step 05/10 - MSN Changed')
+
+    meters_changed = msn_check()
+
+    log(f'{meters_changed} Meter(s) Changed')
+
+    log('Step 06/10 - Compliance')
 
     capability_data_collection()
 
     df = compliance.establish_meter_compliance(df)
 
-    reintroduce_churn_loss()
+    #print(df)
 
+    log('Step 07/10 - Reintroduce Churn Loss')
+    #reintroduce_churn_loss()
+
+    log('Step 08/10 - Merge Previous Funnel')
     df = eligibility.merge_previous_funnel(df)
 
-    df = eligibility.create_funnel(df)
+    log('Step 09/10 - Create Eligbility Funnel')
+    #df = eligibility.create_funnel(df)
+
+#print(__name__)

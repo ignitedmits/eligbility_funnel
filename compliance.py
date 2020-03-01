@@ -1,10 +1,9 @@
 import pandas as pd
 import initdf
+import datetime
+from initdf import log
 
-def no_meter_change_compliance(df):
-    
-    
-
+def no_meter_change_compliance(df):  
     #traditional capability
     is_traditional = df['previous_capability'] == 'Traditional'
     #not_traditional = df['previous_capability'] != 'Traditional'
@@ -51,15 +50,15 @@ def no_meter_change_compliance(df):
 
     #historic D10s
     d10_arr = [col for col in df.columns if 'D10' in col][2:]    
-    df.loc[has_d313 & (df['current_capability'] == '') & prev_amr_compliant & ((df[d10_arr[0]] == 'Yes') | (df[d10_arr[1]] == 'Yes') | (df[d10_arr[2]] == 'Yes') | (df[d10_arr[3]] == 'Yes') | (df[d10_arr[4]] == 'Yes') | (df[d10_arr[5]] == 'Yes')), 'current_capability'] = 'AMR Compliant'
+    df.loc[has_d313 & (df['current_capability'] == 'U') & prev_amr_compliant & ((df[d10_arr[0]] == 'Yes') | (df[d10_arr[1]] == 'Yes') | (df[d10_arr[2]] == 'Yes') | (df[d10_arr[3]] == 'Yes') | (df[d10_arr[4]] == 'Yes') | (df[d10_arr[5]] == 'Yes')), 'current_capability'] = 'AMR Compliant'
 
     #Should a previously declared “AMR Compliant” meter now show no D10 reads or “Profile Data” 
     #mark as “AMR Capable” in the “Current Capability” column
     profile_data = df['profile_data'] == 'Yes'
 
-    df.loc[has_d313 & (df['current_capability'] == '') & prev_amr_compliant & (~profile_data & ~has_d10 & (df[d10_arr[0]] == 'No') & (df[d10_arr[1]] == 'No') & (df[d10_arr[2]] == 'No') & (df[d10_arr[3]] == 'No') & (df[d10_arr[4]] == 'No') & (df[d10_arr[5]] == 'No') ), 'current_capability'] = 'AMR Capable'
+    df.loc[has_d313 & (df['current_capability'] == 'U') & prev_amr_compliant & (~profile_data & ~has_d10 & (df[d10_arr[0]] == 'No') & (df[d10_arr[1]] == 'No') & (df[d10_arr[2]] == 'No') & (df[d10_arr[3]] == 'No') & (df[d10_arr[4]] == 'No') & (df[d10_arr[5]] == 'No') ), 'current_capability'] = 'AMR Capable'
 
-    #df.loc[has_d313 & prev_amr_compliant & (df['current_capability'] == '') & (profile_data | has_d10 | ~no_rejected_d10),'current_capability'] = 'AMR Capable'
+    #df.loc[has_d313 & prev_amr_compliant & (df['current_capability'] == 'U') & (profile_data | has_d10 | ~no_rejected_d10),'current_capability'] = 'AMR Capable'
 
 
     #Remove filters from previous capabilities columns
@@ -71,14 +70,16 @@ def no_meter_change_compliance(df):
     #if so mark as “AMR Compliant”
     df.loc[prev_amr_capable & has_d313 & has_d10 & no_rejected_d10, 'current_capability'] = 'AMR Compliant'
 
-    df.loc[has_d313 & (df['current_capability'] == '') & prev_amr_capable & ((df[d10_arr[0]] == 'Yes') | (df[d10_arr[1]] == 'Yes') | (df[d10_arr[2]] == 'Yes') | (df[d10_arr[3]] == 'Yes') | (df[d10_arr[4]] == 'Yes') | (df[d10_arr[5]] == 'Yes')), 'current_capability'] = 'AMR Compliant'
+    df.loc[has_d313 & (df['current_capability'] == 'U') & prev_amr_capable & ((df[d10_arr[0]] == 'Yes') | (df[d10_arr[1]] == 'Yes') | (df[d10_arr[2]] == 'Yes') | (df[d10_arr[3]] == 'Yes') | (df[d10_arr[4]] == 'Yes') | (df[d10_arr[5]] == 'Yes')), 'current_capability'] = 'AMR Compliant'
 
     #If no “Accepted D10” or “Profile Data” is found then mark as “AMR Capable”
 
-    df.loc[(df['current_capability'] == '') & prev_amr_capable & (profile_data | ~has_d10), 'current_capability'] = 'AMR Capable'
+    df.loc[(df['current_capability'] == 'U') & prev_amr_capable & (profile_data | ~has_d10), 'current_capability'] = 'AMR Capable'
 
     #Added by Mithun to be verified with Tom
-    df.loc[(df['current_capability'] == '') & (has_d313 | profile_data), 'current_capability'] = 'AMR Compliant'
+    df.loc[(df['current_capability'] == 'U') & (has_d313 | profile_data), 'current_capability'] = 'AMR Compliant'
+
+    #print(df)
 
     return df
 
@@ -97,10 +98,11 @@ def meter_changed_compliance(df):
     no_rejected_d10 = df['Rejected_D10'] == 'No'
 
     df.loc[is_traditional & has_d313 & has_d10 & no_rejected_d10, 'current_capability'] = 'AMR Compliant'
+    
 
     #Remove the filter from 'D10 accepted' and 'Rejected D10' and mark these as 'AMR Capable'
 
-    df.loc[is_traditional & has_d313 & (df['current_capability'] == ''), 'current_capability'] = 'AMR Capable'
+    df.loc[is_traditional & has_d313 & (df['current_capability'] == 'U'), 'current_capability'] = 'AMR Capable'
 
     #Remove the filter from 'D313 Received'
     #Filter column titled 'amr_type' to show AMR codes 'RCAMR' or 'RCAMY'
@@ -109,11 +111,11 @@ def meter_changed_compliance(df):
     #Remove the filter from 'Profile Data'
     #Mark these as 'AMR Compliant' in the 'Current Capability' column
 
-    df.loc[is_traditional & (df['amr_type'].isin(amr_type_arr)) & has_d10 & no_rejected_d10 & (df['current_capability'] == ''), 'current_capability'] = 'AMR Compliant'
+    df.loc[is_traditional & (df['amr_type'].isin(amr_type_arr)) & has_d10 & no_rejected_d10 & (df['current_capability'] == 'U'), 'current_capability'] = 'AMR Compliant'
 
     #Remove the filer from 'D10 accepted' and 'Rejected D10' and mark these as 'AMR Capable
 
-    df.loc[is_traditional & (df['amr_type'].isin(amr_type_arr)) & (df['current_capability'] == ''), 'current_capability'] = 'AMR Capable'
+    df.loc[is_traditional & (df['amr_type'].isin(amr_type_arr)) & (df['current_capability'] == 'U'), 'current_capability'] = 'AMR Capable'
 
     #Remove the filters from 'amr_type'
     #Filter column 'mtr_typ' to show any meter types containing 'RCAMR' or 'RCAMY'
@@ -121,14 +123,14 @@ def meter_changed_compliance(df):
     #Mark these as 'AMR Compliant' in the 'Current Capability' column
     #Remove the filter from 'Profile Data'
     #Mark these as 'AMR Compliant' in the 'Current Capability' column
-    df.loc[is_traditional & ((df['mtr_typ'].str.contains(amr_type_arr[0])) | (df['mtr_typ'].str.contains(amr_type_arr[1]))) & has_d10 & no_rejected_d10 & (df['current_capability'] == ''), 'current_capability'] = 'AMR Compliant'
+    df.loc[is_traditional & ((df['mtr_typ'].str.contains(amr_type_arr[0])) | (df['mtr_typ'].str.contains(amr_type_arr[1]))) & has_d10 & no_rejected_d10 & (df['current_capability'] == 'U'), 'current_capability'] = 'AMR Compliant'
 
     #Remove the filer from 'D10 accepted' and 'Rejected D10' and mark these as 'AMR Capable
-    df.loc[is_traditional & ((df['mtr_typ'].str.contains(amr_type_arr[0])) | (df['mtr_typ'].str.contains(amr_type_arr[1]))) & (df['current_capability'] == ''), 'current_capability'] = 'AMR Capable'
+    df.loc[is_traditional & ((df['mtr_typ'].str.contains(amr_type_arr[0])) | (df['mtr_typ'].str.contains(amr_type_arr[1]))) & (df['current_capability'] == 'U'), 'current_capability'] = 'AMR Capable'
 
     #Remove the filter from 'mtr_typ'
     #Mark the remaining meters as 'Traditional' in the 'Current Capability' column
-    df.loc[is_traditional & (df['current_capability'] == ''), 'current_capability'] = 'Traditional'
+    df.loc[is_traditional & (df['current_capability'] == 'U'), 'current_capability'] = 'Traditional'
 
     #added by Mithun to be verified by Tom S
     #The remaining non Traditionals
@@ -145,10 +147,13 @@ def meter_gained_compliance(df):
 
     #Filter column 'mtr_typ' to show 'S1, S1A, S1AD or S1ADE' values, this indicates a 'SMETS1' meter
     #Filter column 'mtr_inst_dr' to show all installed post 5th Dec 2018, mark these as 'SMETS1 Capable' in the 'Current Capability' column
-    df.loc[(df.loc[:,'mtr_typ'].str.contains(smets1_mtr[0])) | (df.loc[:,'mtr_typ'].str.contains(smets1_mtr[1])) | (df.loc[:,'mtr_typ'].str.contains(smets1_mtr[2])) | (df.loc[:,'mtr_typ'].str.contains(smets1_mtr[3])), 'current_capability'] = 'SMETS1 Capable'
+    df.loc[(df['mtr_typ'].str.contains(smets1_mtr[0])) | (df['mtr_typ'].str.contains(smets1_mtr[1])) | (df['mtr_typ'].str.contains(smets1_mtr[2])) | (df['mtr_typ'].str.contains(smets1_mtr[3])), 'current_capability'] = 'SMETS1 Capable'
+    #df.loc[(df['mtr_typ'].str.contains(smets1_mtr[0])) | (df['mtr_typ'].str.contains(smets1_mtr[1])) | (df['mtr_typ'].str.contains(smets1_mtr[2])) | (df['mtr_typ'].str.contains(smets1_mtr[3])), 'current_capability'] = 'SMETS1 Capable'
 
     #Filter column 'mtr_inst_dt' to show all installs pre 5th Dec 2018, mark these as 'SMETS1 Compliant' in the 'Current Capability' column
-    is_s1_compliant = df['mtr_inst_dt'] < initdf.s1_compliant_date()
+    #print(type(df['mtr_inst_dt']))
+    #print(type(initdf.s1_compliant_date()))
+    is_s1_compliant = df['mtr_inst_dt'] < pd.Timestamp(2018, 12, 5)#initdf.s1_compliant_date()
     s1_capable = df['current_capability'] == 'SMETS1 Capable'
     df.loc[is_s1_compliant & s1_capable, 'current_capability'] = 'SMETS1 Compliant'
 
@@ -162,10 +167,11 @@ def meter_gained_compliance(df):
     has_d313 = df['Accepted_D313'] == 'Yes'
     has_d10 = df['Accepted_D10'] == 'Yes'
     no_rejected_d10 = df['Rejected_D10'] == 'No'
-    df.loc[has_d313 & has_d10 & no_rejected_d10 & (df['current_capability'] == ''), 'current_capability'] = 'AMR Compliant'
+    
+    df.loc[has_d313 & has_d10 & no_rejected_d10, 'current_capability'] = 'AMR Compliant'
 
     #Remove the filer from 'D10 accepted' and 'Rejected D10' and mark these as 'AMR Capable'
-    df.loc[has_d313 & (df['current_capability'] == ''), 'current_capability'] = 'AMR Capable'
+    df.loc[has_d313 & (df['current_capability'] == 'U'), 'current_capability'] = 'AMR Capable'
 
     #Remove the filter from 'D313 Received'
     #Filter column titled 'amr_type' to show AMR codes 'RCAMR' or 'RCAMY'
@@ -173,27 +179,31 @@ def meter_gained_compliance(df):
     #Mark these as 'AMR Compliant' in the 'Current Capability' column
     #Remove the filter from 'Profile Data'
     #Mark these as 'AMR Compliant' in the 'Current Capability' column
-    df.loc[(df['amr_type'].isin(amr_type_arr)) & has_d10 & no_rejected_d10 & (df['current_capability'] == ''), 'current_capability'] = 'AMR Compliant'
+    df.loc[(df['amr_type'].isin(amr_type_arr)) & has_d10 & no_rejected_d10 & (df['current_capability'] == 'U'), 'current_capability'] = 'AMR Compliant'
 
     #Remove the filer from 'D10 accepted' and 'Rejected D10' and mark these as 'AMR Capable
-    df.loc[(df['amr_type'].isin(amr_type_arr)) & (df['current_capability'] == ''), 'current_capability'] = 'AMR Capable'
+    df.loc[(df['amr_type'].isin(amr_type_arr)) & (df['current_capability'] == 'U'), 'current_capability'] = 'AMR Capable'
 
     #with Meter Type
-    #df.loc[((df['mtr_typ'].str.contains(amr_type_arr[0])) | (df['mtr_typ'].str.contains(amr_type_arr[1]))) & has_d10 & no_rejected_d10 & (df['current_capability'] == ''), 'current_capability'] = 'AMR Compliant'
-    #df.loc[((df['mtr_typ'].str.contains(amr_type_arr[0])) | (df['mtr_typ'].str.contains(amr_type_arr[1]))) & (df['current_capability'] == ''), 'current_capability'] = 'AMR Capable'
+    #df.loc[((df['mtr_typ'].str.contains(amr_type_arr[0])) | (df['mtr_typ'].str.contains(amr_type_arr[1]))) & has_d10 & no_rejected_d10 & (df['current_capability'] == 'U'), 'current_capability'] = 'AMR Compliant'
+    #df.loc[((df['mtr_typ'].str.contains(amr_type_arr[0])) | (df['mtr_typ'].str.contains(amr_type_arr[1]))) & (df['current_capability'] == 'U'), 'current_capability'] = 'AMR Capable'
 
     #pending Traditionals
-    df.loc[(df['current_capability'] == ''), 'current_capability'] = 'Traditional'
+    df.loc[(df['current_capability'] == 'U'), 'current_capability'] = 'Traditional'
+    #print(df)
     return df
 
 def establish_meter_compliance(df):
+    log('Load Month End Capability Funnel')
+    
     month_end_df = initdf.open_month_end_df()
     month_end_df = month_end_df[[month_end_df.columns[0], 'Current Capability']]
     mpan_col = month_end_df.columns[0]
     month_end_df.rename(columns = {mpan_col:'core_mpan'},  inplace = True)
     df = pd.merge(df, month_end_df, how='left', on=['core_mpan', 'core_mpan'])
     df.rename(columns = {'Current Capability':'previous_capability'}, inplace = 'True')
-
+    
+    log('Load Previous Capability Funnel')
 
     prev_df = initdf.open_previous_funnel()
     prev_df = prev_df[[prev_df.columns[0], 'Current Meter']]
@@ -202,28 +212,56 @@ def establish_meter_compliance(df):
     df = pd.merge(df, prev_df, how='left', on=['core_mpan', 'core_mpan'])
     df.rename(columns = {'Current Meter':'funnel_capability'}, inplace = 'True')
     
-df.loc['current_capability'] = ''
-    compliance_df = []
+    log('reset current capability')
+    df['current_capability'] = 'U'
+    compliance_df = [None, None, None]
+    
+    log('process gained meters')
+    #for gained meters
+    #Filter the 'Meter Change' column to show all meters that have #N/A value, this indicates a gained meter
+    #Here 'Meter Changed' == 'Gain'
+    compliance_df[0] = df[df['Meter Changed'] == 'Gain'].copy()
+    compliance_df[0] = meter_gained_compliance(compliance_df[0])
+
+    compliance_df[0].to_csv (r'temp/gain_mpan.csv', index = None, header=True)
+    
+    log('process changed meters')
 
     #for changed meters
     #Filter the 'Meter Change' column to show all meters that have changed 
     #between last month and this month
-    compliance_df.append(df.loc[df['Meter Changed'] == 'Yes'])
+    compliance_df[1] = df[df['Meter Changed'] == 'Yes'].copy()
+    compliance_df[1] = meter_changed_compliance(compliance_df[1])
 
-    compliance_df[0] = meter_changed_compliance(compliance_df[0])
+    compliance_df[1].to_csv (r'temp/change_mpan.csv', index = None, header=True)
+    
+    log('process old meters')
 
     #for same meters and no gains
     #Filter the 'Meter Change' column to show all meters that have NOT changed 
     #between last month and this month
-    compliance_df.append(df.loc[df['Meter Changed'] == 'No'])
-    compliance_df[1] = no_meter_change_compliance(compliance_df[1])
+    compliance_df[2] = df[df['Meter Changed'] == 'No'].copy()
+    compliance_df[2] = no_meter_change_compliance(compliance_df[2])
 
-    #for gained meters
-    #Filter the 'Meter Change' column to show all meters that have #N/A value, this indicates a gained meter
-    #Here 'Meter Changed' == 'Gain'
-    compliance_df.append(df.loc[df['Meter Changed'] == 'Gain'])
-    compliance_df[2] = meter_gained_compliance(compliance_df[2])
+    compliance_df[2].to_csv (r'temp/old_mpan.csv', index = None, header=True)
 
-    df.rename(columns = {'funnel_capability':'Funnel Capability', 'previous_capability':'Previous Capability'}, inplace = 'True')
+    #print(compliance_df[0])
     
-    return pd.concat(compliance_df, axis=0, ignore_index=True, sort=False)
+    log('stiching meters compliance together')
+
+    df = pd.concat(compliance_df, axis=0, ignore_index=True, sort=False)
+
+    df.rename(columns = {'funnel_capability':'Funnel Capability', 'previous_capability':'Previous Capability', 'current_capability':'Current Capability'}, inplace = 'True')
+    
+    log('Meter Compliance Established')
+
+    try:
+        df.to_csv (r'temp/comply.csv', index = None, header=True)
+    except:
+        pass
+    return df
+
+if __name__ == '__main__':
+    df = pd.read_excel('esbos/elec_esbos_raw.xlsx')
+    df = establish_meter_compliance(df)
+    del df

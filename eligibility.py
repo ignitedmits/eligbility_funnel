@@ -114,6 +114,13 @@ def merge_previous_funnel(df):
    
     df = pd.merge(df, prev_df, how='left', on=['core_mpan', 'core_mpan'])
 
+    df.rename(columns = {'core_mpan':'MPAN'}, inplace = True)
+
+    try:
+        df.to_csv (r'temp/new.csv', index = None, header=True)
+    except:
+        pass
+
     del prev_df
     
     return df

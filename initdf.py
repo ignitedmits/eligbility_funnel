@@ -1,6 +1,7 @@
 import pandas as pd
 import json
 import glob
+import time
 
 def open_month_end_df():
     with open('config.JSON') as config_file:
@@ -124,6 +125,8 @@ def get_profile_data():
 
 def init_dataframe():
 
+    #print('Entering in Python Framework')
+
     with open('config.JSON') as config_file:
         data = json.load(config_file)
 
@@ -148,3 +151,7 @@ def s1_compliant_date():
         data = json.load(config_file)
 
     return data['eligibility_funnel']['elec_config']['s1_compliant_date']
+
+def log(message):
+    log_time = time.strftime("%H:%M:%S",time.localtime())
+    print(f'{log_time}:  {message}')
