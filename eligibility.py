@@ -57,13 +57,17 @@ def create_funnel(df):
     df.loc[df['bill_pcode']=='NA','Shortcode'] = 'NA'
 
     #Phone Number (Y/N)
+    df['cust1_phon1_num'] = df['cust1_phon1_num'].str.replace(" ","")
     df['cust1_phon1_num'] = df['cust1_phon1_num'].fillna('NA')
+    df.loc[(df['cust1_phon1_num']=='NA') | (df['cust1_phon1_num']==''),'cust1_phon1_num'] = 'NA'
     df['Phone Number (Y/N)'] = df['cust1_phon1_num'].apply(lambda x: 'N' if x == '' else 'Y')
-    df.loc[df['cust1_phon1_num']=='NA','Phone Number (Y/N)'] = 'NA'
+    df.loc[(df['cust1_phon1_num']=='NA') | (df['cust1_phon1_num']==''),'Phone Number (Y/N)'] = 'N'
+    #df.loc[(df['cust1_phon1_num']=='NA') | (df['cust1_phon1_num']==''),'cust1_phon1_num'] = ''
 
     #LandLine/Mobile    
     df['LandLine/Mobile'] = df['cust1_phon1_num'].apply(lambda x: 'Mobile' if x[:2] == '07' else 'Landline')
-    df.loc[df['cust1_phon1_num']=='NA','LandLine/Mobile'] = 'NA'
+    df.loc[(df['cust1_phon1_num']=='NA') | (df['cust1_phon1_num']==''),'LandLine/Mobile'] = 'NA'
+    df.loc[(df['cust1_phon1_num']=='NA') | (df['cust1_phon1_num']==''),'cust1_phon1_num'] = '<Unknown>'
 
     #Rate Type
     sic_df = initdf.open_sic_file()
@@ -72,9 +76,11 @@ def create_funnel(df):
     del sic_df
 
     #Email Address
+    df['E-Mail 1'] = df['E-Mail 1'].str.replace(" ","")
     df['E-Mail 1'] = df['E-Mail 1'].fillna('NA')
     df['Email Address (Y/N)'] = df['E-Mail 1'].apply(lambda x: 'N' if x == '' else 'Y')
-    df.loc[df['E-Mail 1']=='NA','Email Address (Y/N)'] = 'NA'
+    df.loc[(df['E-Mail 1']=='NA') | (df['E-Mail 1']==''),'Email Address (Y/N)'] = 'N'
+    df.loc[(df['E-Mail 1']=='NA') | (df['E-Mail 1']==''),'E-Mail 1'] = '<Unknown>'
 
     df.rename(columns = {'core_mpan':'MPAN','mpan_status':'New Sites', 'cust1_cust_nm':'Customer Name', 'id_crac':'CA Number', 'Current Capability': 'Current Meter', \
         'mtr_mod':'Meter Model', 'sp_descr':'Tariff Name', 'id_blfr1':'Billing Cycle', 'bill_addr':'Billing Address', 'bill_pcode':'Billing Address Postcode', \
@@ -133,6 +139,8 @@ def merge_previous_funnel(df):
     df.rename(columns = {'core_mpan':'MPAN'}, inplace = True)
 
     df = create_funnel(df)
+
+    df= df.sort_values(['MPAN'], ascending=False)
 
     try:
         df.to_csv (r'temp/new.csv', index = None, header=True)

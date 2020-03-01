@@ -253,6 +253,8 @@ if __name__ == "__main__":
     df = eligibility.merge_previous_funnel(df)
 
     log('Step 09/10 - Create Eligbility Funnel')
-    #df = eligibility.create_funnel(df)
+
+    log('Step 10/10 - Report Complete') 
+
 
 #print(__name__)
