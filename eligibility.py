@@ -16,9 +16,9 @@ def cust_type(cust_num):
 
 def create_funnel(df):
     #for unit testing
-    df.rename(columns ={'current_capability': 'Current Capability', 'msn_count':'Count of MSN' }, inplace = 'True')
+    df.rename(columns ={'msn_count':'Count of MSN', 'Gain?':'New Sites'}, inplace = 'True')
 
-    df['temp_count_col'] = df.groupby('cust1_cust_nm')['core_mpan'].transform('count')
+    df['temp_count_col'] = df.groupby('cust1_cust_nm')['MPAN'].transform('count')
 
     df['Customer Type'] = df['temp_count_col'].apply(cust_type)
 
@@ -26,42 +26,59 @@ def create_funnel(df):
 
     #CT/WC
     mt_df = initdf.open_meter_type()
-
-    mt_df.rename(columns={mt_df.columns[0]:'mtr_typ'}, inplace = True)
+    mt_df.rename(columns={mt_df.columns[0]:'mtr_typ', mt_df.columns[1]:'CT/WC'}, inplace = True)
     df = pd.merge(df, mt_df, how='left', on=['mtr_typ', 'mtr_typ'])
-    df.rename(columns = {df.columns[-1]:'CT/WC'}, inplace = True)
     del mt_df
 
     #CT Ratio
-    df['CT Ratio'] = df['CT/WC'].apply(lambda x: 'N/A' if x =='WC' else 'Unknown')
+    df['CT Ratio'] = df['CT/WC'].apply(lambda x: 'NA' if x =='WC' else 'Unknown')
 
     #Supply Type
-
-
-
-    df['Meter Model'] = df['mtr_mod']
-    df['Service Plan'] = df['sp_descr']
-    df['Rate Type'] =  ''
+    model_df = initdf.open_meter_model()
+    model_df.rename(columns={model_df.columns[0]:'mtr_mod', model_df.columns[1]:'Supply Type'}, inplace = True)
+    df = pd.merge(df, model_df, how='left', on=['mtr_mod', 'mtr_mod'])
+    del model_df
     
-    
+    #Service Plan
+    tariff_df = initdf.open_meter_tariff()
+    tariff_df.rename(columns={tariff_df.columns[0]:'sp_descr', model_df.columns[1]:'Service Plan'}, inplace = True)
+    df = pd.merge(df, tariff_df, how='left', on=['sp_descr', 'sp_descr'])
+    del tariff_df
 
-    df['CT Ratio'] = ''
+    #Rate Type
+    rate_df = initdf.open_rate_type()
+    rate_df.rename(columns={rate_df.columns[0]:'sp_descr', rate_df.columns[1]:'Rate Type'}, inplace = True)
+    df = pd.merge(df, rate_df, how='left', on=['sp_descr', 'sp_descr'])
+    del rate_df
 
-    #check for NaN
+    #Shortcode
+    df['bill_pcode'] = df['bill_pcode'].fillna('NA')
     df['Shortcode'] = df['bill_pcode'].apply(lambda x: x.split(' ')[0])
+    df.loc[df['bill_pcode']=='NA','Shortcode'] = 'NA'
 
-    #check for NaN
+    #Phone Number (Y/N)
+    df['cust1_phon1_num'] = df['cust1_phon1_num'].fillna('NA')
     df['Phone Number (Y/N)'] = df['cust1_phon1_num'].apply(lambda x: 'N' if x == '' else 'Y')
+    df.loc[df['cust1_phon1_num']=='NA','Phone Number (Y/N)'] = 'NA'
 
-    df['LandLine/Mobile'] = ''
+    #LandLine/Mobile    
+    df['cust1_phon1_num'] = df['cust1_phon1_num'].fillna('NA')
+    df['LandLine/Mobile'] = df['cust1_phon1_num'].apply(lambda x: 'Mobile' if x[:2] == '07' else 'Landline')
+    df.loc[df['cust1_phon1_num']=='NA','LandLine/Mobile'] = 'NA'
 
-    df['Industry Sector'] = ''
+    #Rate Type
+    sic_df = initdf.open_sic_file()
+    sic_df.rename(columns={sic_df.columns[0]:'SIC_CODE', sic_df.columns[1]:'Industry Sector'}, inplace = True)
+    df = pd.merge(df, sic_df, how='left', on=['SIC_CODE', 'SIC_CODE'])
+    del sic_df
 
-    #check for NaN
-    df['Email Address (Y/N)'] = df['E-Mail 1'].apply(lambda x: 'N' if x == '' else 'Y')
+    #Email Address
+    df['E-Mail 1'] = df['E-Mail 1'].fillna('NA')
+    df['LandLine/Mobile'] = df['E-Mail 1'].apply(lambda x: 'N' if x == '' else 'Y')
+    df.loc[df['E-Mail 1']=='NA','Email Address (Y/N)'] = 'NA'
 
     df.rename(columns = {'core_mpan':'MPAN','mpan_status':'New Sites', 'cust1_cust_nm':'Customer Name', 'id_crac':'CA Number', 'Current Capability': 'Current Meter', \
-        'sp_descr':'Tariff Name', 'id_blfr1':'Billing Cycle', 'bill_addr':'Billing Address', 'bill_pcode':'Billing Address Postcode', \
+        'mtr_mod':'Meter Model', 'sp_descr':'Tariff Name', 'id_blfr1':'Billing Cycle', 'bill_addr':'Billing Address', 'bill_pcode':'Billing Address Postcode', \
             'site_addr1':'Address Line 1', 'site_addr2':'Address Line 2', 'site_addr3':'Address Line 3', 'site_addr4':'Address Line 4', 'site_pcode':'Postcode', \
                 'cust1_phon1_num':'Phone Number Detail', 'id_proc':'P.C.', 'Count of MSN':'Meters per MPAN', 'MSN':'MSN',  \
                     'id_sstc':'SSC', 'CONTRACTSTARTDATE' :'Contract End Date', 'ESIQS_TLUPSTAFF_NAME': 'KAM', 'SIC_CODE':'SIC Code', 'mtr_inst_dt':'Meter Install Date', \
@@ -115,6 +132,8 @@ def merge_previous_funnel(df):
     df = pd.merge(df, prev_df, how='left', on=['core_mpan', 'core_mpan'])
 
     df.rename(columns = {'core_mpan':'MPAN'}, inplace = True)
+
+    df = create_funnel(df)
 
     try:
         df.to_csv (r'temp/new.csv', index = None, header=True)

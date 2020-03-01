@@ -23,12 +23,26 @@ def open_month_end_df():
 
     #return month_end_df
 
+def open_sic_file():
+    with open('config.JSON') as config_file:
+        data = json.load(config_file)
+
+    file_location = data['eligibility_funnel']['funnel_lookups']['locate_lookup']
+    file_name = data['eligibility_funnel']['funnel_lookups']['sic_code']
+
+    sic_code_file = file_location + file_name
+
+    if sic_code_file[-4:] == '.csv':
+        return  pd.read_csv(sic_code_file)
+    else:
+        return pd.read_excel(sic_code_file)
+
 
 def open_meter_type():
     with open('config.JSON') as config_file:
         data = json.load(config_file)
 
-    file_location = data['eligibility_funnel']['funnel_lookups']['funnel_lookups']
+    file_location = data['eligibility_funnel']['funnel_lookups']['locate_lookup']
     file_name = data['eligibility_funnel']['funnel_lookups']['meter_type']
 
     meter_typ_file = file_location + file_name
@@ -37,6 +51,21 @@ def open_meter_type():
         return  pd.read_csv(meter_typ_file)
     else:
         return pd.read_excel(meter_typ_file)
+
+def open_rate_type():
+    with open('config.JSON') as config_file:
+        data = json.load(config_file)
+
+    file_location = data['eligibility_funnel']['funnel_lookups']['locate_lookup']
+    file_name = data['eligibility_funnel']['funnel_lookups']['rate_type']
+
+    rate_type_file = file_location + file_name
+
+    if rate_type_file[-4:] == '.csv':
+        return  pd.read_csv(rate_type_file)
+    else:
+        return pd.read_excel(rate_type_file)
+
 
 
 def open_previous_funnel():
@@ -85,6 +114,39 @@ def open_accepted_d313():
         return  pd.read_csv(d313_file)
     else:
         return pd.read_excel(d313_file)
+
+
+def open_meter_model():
+
+    with open('config.JSON') as config_file:
+        data = json.load(config_file)
+
+    file_location = data['eligibility_funnel']['flow_data']['locate_lookup']
+    file_name = data['eligibility_funnel']['flow_data']['meter_model']
+
+    meter_model_file = file_location + file_name
+
+    if meter_model_file[-4:] == '.csv':
+        return  pd.read_csv(meter_model_file)
+    else:
+        return pd.read_excel(meter_model_file)
+
+
+def open_meter_tariff():
+
+    with open('config.JSON') as config_file:
+        data = json.load(config_file)
+
+    file_location = data['eligibility_funnel']['flow_data']['locate_lookup']
+    file_name = data['eligibility_funnel']['flow_data']['tariff']
+
+    meter_tariff = file_location + file_name
+
+    if meter_model[-4:] == '.csv':
+        return  pd.read_csv(meter_tariff)
+    else:
+        return pd.read_excel(meter_tariff)
+
 
 
 def open_rejected_d10():
