@@ -41,7 +41,7 @@ def create_funnel(df):
     
     #Service Plan
     tariff_df = initdf.open_meter_tariff()
-    tariff_df.rename(columns={tariff_df.columns[0]:'sp_descr', model_df.columns[1]:'Service Plan'}, inplace = True)
+    tariff_df.rename(columns={tariff_df.columns[0]:'sp_descr', tariff_df.columns[1]:'Service Plan'}, inplace = True)
     df = pd.merge(df, tariff_df, how='left', on=['sp_descr', 'sp_descr'])
     del tariff_df
 
@@ -62,7 +62,6 @@ def create_funnel(df):
     df.loc[df['cust1_phon1_num']=='NA','Phone Number (Y/N)'] = 'NA'
 
     #LandLine/Mobile    
-    df['cust1_phon1_num'] = df['cust1_phon1_num'].fillna('NA')
     df['LandLine/Mobile'] = df['cust1_phon1_num'].apply(lambda x: 'Mobile' if x[:2] == '07' else 'Landline')
     df.loc[df['cust1_phon1_num']=='NA','LandLine/Mobile'] = 'NA'
 
@@ -74,7 +73,7 @@ def create_funnel(df):
 
     #Email Address
     df['E-Mail 1'] = df['E-Mail 1'].fillna('NA')
-    df['LandLine/Mobile'] = df['E-Mail 1'].apply(lambda x: 'N' if x == '' else 'Y')
+    df['Email Address (Y/N)'] = df['E-Mail 1'].apply(lambda x: 'N' if x == '' else 'Y')
     df.loc[df['E-Mail 1']=='NA','Email Address (Y/N)'] = 'NA'
 
     df.rename(columns = {'core_mpan':'MPAN','mpan_status':'New Sites', 'cust1_cust_nm':'Customer Name', 'id_crac':'CA Number', 'Current Capability': 'Current Meter', \
