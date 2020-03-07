@@ -3,3 +3,4 @@ matplotlib/mega_mpan.csv
 mega_mpan.csv
 *.pyc
 log
+*.pyc

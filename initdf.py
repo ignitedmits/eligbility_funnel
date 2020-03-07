@@ -7,12 +7,9 @@ import socket
 import os
 import os.path
 import getpass
-
 import pendulum
 
-
 month = ['Month','January','February','March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-
 
 def open_month_end_df():
     with open('config.JSON') as config_file:

@@ -1,7 +1,6 @@
 import pandas as pd
 import funnel 
 import initdf
-
 from initdf import log
 
 
@@ -102,7 +101,7 @@ def create_funnel(df):
 
     df['MPAN ID'] = df['MPAN'].apply(lambda x: str(x)[:2])
 
-    new_df = df[[ \
+    df = df[[ \
         'MPAN','MPAN ID', 'New Sites', 'Customer Name', 'Customer Type',  'Single/Multi Site', 'CA Number', 'CT/WC', 'CT Ratio', 'Current Meter',  \
             'Supply Type', 'Service Plan', 'Tariff Name', 'Rate Type', 'Billing Cycle', \
                 'Billing Address', 'Billing Address Postcode', 'Address Line 1', 'Address Line 2', 'Address Line 3', 'Address Line 4', 'Postcode', 'Shortcode', \
