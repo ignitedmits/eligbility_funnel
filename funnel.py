@@ -179,8 +179,6 @@ def get_loss():
     
     df_old = initdf.open_month_end_df()
 
-
-
     current_mpan = set(df['core_mpan'].tolist())
     old_mpan = set(df_old['core_mpan'].tolist())
     loss_mpan = list(old_mpan.difference(current_mpan))
@@ -196,8 +194,6 @@ def get_loss():
         log('e.Churn Loss File could not be saved. Possible reasons access to write is restricted or the file with the same name is present and open')
 
     mpans_lost = df_loss.shape[0]
-
-
 
     log(f'i.{mpans_lost} MPANS Lost this Month')
     del old_mpan, current_mpan, df_loss, mpans_lost
@@ -298,17 +294,15 @@ if __name__ == "__main__":
 
     df = compliance.establish_meter_compliance(df)
 
-    #print(df)
-
     log('Step 07/10 - Reintroduce Churn Loss')
+    log('i.Churn Loss will be added after updated reports from ESBOS')
     #reintroduce_churn_loss()
 
     log('Step 08/10 - Merge Previous Funnel')
     df = eligibility.merge_previous_funnel(df)
 
-    log('Step 09/10 - Create Eligbility Funnel')
+    log('Step 09/10 - Create Month End Report Funnel')
+    eligibility.create_funnel(df)
 
-    log('Step 10/10 - Report Complete') 
-
-
-#print(__name__)
+    log('Step 10/10 - Report Completion')
+    log('i.Final report created.')
