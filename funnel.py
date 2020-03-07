@@ -149,7 +149,7 @@ def assign_gain():
     #df1 = pd.read_excel('eligibility_dup.xlsx')
     df_gain = initdf.open_month_end_df()
 
-    last_mon = initdf.get_last_month()
+    last_mon = initdf.get_last_month(1)
 
     log(f'i.{df_gain.shape[0]} MPAN(s) in {last_mon} Elec Funnel')
 

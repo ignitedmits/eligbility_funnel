@@ -219,7 +219,7 @@ def get_current_month():
     #cur_year = int(pendulum.datetime.today().strftime('%Y'))
     return cur_date, cur_month, cur_year
 
-def get_last_month():
+def get_last_month(month_nums):
     global month
-    mon = int(pendulum.datetime.today().subtract(months=1).strftime('%m'))
+    mon = int(pendulum.datetime.today().subtract(months=month_nums).strftime('%m'))
     return month[mon]
