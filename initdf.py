@@ -3,6 +3,17 @@ import json
 import glob
 import time
 
+import socket
+import os
+import os.path
+import getpass
+
+import pendulum
+
+
+month = ['Month','January','February','March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+
 def open_month_end_df():
     with open('config.JSON') as config_file:
         data = json.load(config_file)
@@ -159,6 +170,56 @@ def s1_compliant_date():
         data = json.load(config_file)
     return data['eligibility_funnel']['elec_config']['s1_compliant_date']
 
+
+def get_current_elec_name():
+    with open('config.JSON') as config_file:
+        data = json.load(config_file)
+    return data['eligibility_funnel']['elec_reports']['current_name']
+
+def get_output_location():
+    with open('config.JSON') as config_file:
+        data = json.load(config_file)
+    return data['eligibility_funnel']['elec_reports']['elec_report_output_location']
+
 def log(message):
+
     log_time = time.strftime("%H:%M:%S",time.localtime())
-    print(f'{log_time}:  {message}')
+    if message[:2] == 'i.':
+        print(f'{log_time}:\t[INFO] : {message[2:]}')
+    elif message[:2] == 'w.':
+        print(f'{log_time}:\t[WARNING] : {message[2:]}')
+    elif message[:2] == 'e.':
+        print(f'{log_time}:\t[ERROR] : {message[2:]}') 
+    else:
+        print(f'{log_time}:\t{message}')
+
+def get_user_details():
+    try:
+        username = getpass.getuser()
+        print(f'USER : {username}')
+    except:
+        print("User Unidentified") 
+
+    try: 
+        host_name = socket.gethostname() 
+        host_ip = socket.gethostbyname(host_name) 
+        print(f'HOST : {host_name} \tIP : {host_ip}')
+    except: 
+        print("Unable to get Hostname and IP") 
+
+def get_current_month():
+    global month
+    #get current month from today's date
+    mon = int(pendulum.datetime.today().strftime('%m'))
+    cur_month = month[mon]
+    #get current year
+    cur_year = pendulum.datetime.today().strftime('%Y')
+    #get todays date
+    cur_date = pendulum.datetime.today().strftime('%d')
+    #cur_year = int(pendulum.datetime.today().strftime('%Y'))
+    return cur_date, cur_month, cur_year
+
+def get_last_month():
+    global month
+    mon = int(pendulum.datetime.today().subtract(months=1).strftime('%m'))
+    return month[mon]

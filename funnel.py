@@ -1,6 +1,12 @@
 #from IPython.core.display import display, HTML
 #display(HTML("<style>.container { width:100% !important; }</style>"))
 
+__author__ = "Mithun Shokhwal"
+__version__ = "<prototye>"
+__maintainer__ = "MS75354"
+__email__ = "mithun.shokhwal@sse.com"
+__status__ = "Pilot"
+
 import pandas as pd
 import numpy as np
 
@@ -10,6 +16,7 @@ import initdf
 import time
 
 from initdf import log
+
 
 def rejected_d10():
     global df
@@ -117,6 +124,7 @@ def msn_check():
     df_msn.rename(columns = {'MSN':'Previous MSN'}, inplace = 'True')
     
     #merges dataframes with for msn check
+    df_msn = df_msn.drop_duplicates(['core_mpan'])
     df = pd.merge(df, df_msn, how='left', on=['core_mpan', 'core_mpan'])
     
     #update NaN with 0 for comparison
@@ -141,6 +149,10 @@ def assign_gain():
     #df1 = pd.read_excel('eligibility_dup.xlsx')
     df_gain = initdf.open_month_end_df()
 
+    last_mon = initdf.get_last_month()
+
+    log(f'i.{df_gain.shape[0]} MPAN(s) in {last_mon} Elec Funnel')
+
     #gain_mpan_core = df_gain['core_mpan'].tolist()
     #print(gain_mpan_core)
     df.insert(1,'Gain?','')
@@ -151,26 +163,46 @@ def assign_gain():
     #df['mpan_status'] = df['mpan_status'].fillna('NA')   
 
     #df = df.drop(columns='gain')
-    del df_gain
+    
 
-    return df['Gain?'].value_counts()['Yes']
+    gain_size = df['Gain?'].value_counts()['Yes']
+
+    log(f'i.{gain_size} Meter Gained this Month')
+
+    del df_gain, gain_size
+
+
+    return None
 
 def get_loss():
     global df
     
     df_old = initdf.open_month_end_df()
+
+
+
     current_mpan = set(df['core_mpan'].tolist())
     old_mpan = set(df_old['core_mpan'].tolist())
     loss_mpan = list(old_mpan.difference(current_mpan))
 
     df_loss = df_old.loc[(df_old['core_mpan'].isin(loss_mpan)), ['core_mpan','cust1_cust_nm', 'reg_st_dt']]
-    df_loss.to_csv (r'loss_mpan.csv', index = None, header=True)
+
+    cur_date = initdf.get_current_month()
+
+    output_file = initdf.get_output_location() + 'ChurnLoss_' + cur_date[0] + cur_date[1][:3].upper() + cur_date[2] + '.csv'
+    try:
+        df_loss.to_csv (output_file, index = None, header=True)
+    except:
+        log('e.Churn Loss File could not be saved. Possible reasons access to write is restricted or the file with the same name is present and open')
 
     mpans_lost = df_loss.shape[0]
 
-    del old_mpan, current_mpan, df_loss
 
-    return mpans_lost
+
+    log(f'i.{mpans_lost} MPANS Lost this Month')
+    del old_mpan, current_mpan, df_loss, mpans_lost
+
+    return None
 
 def reintroduce_churn_loss():
     pass
@@ -179,16 +211,25 @@ def reintroduce_churn_loss():
 def elec_initial_cleanse():
     global df
 
-    mpan_recs = df.shape[0]
-
+    
     #remove nat_id
     df = df.drop(columns='nat_id')
 
     #remove future data
+    future_date_mpans = df[df.reg_st_dt > initdf.future_reg_date()].shape[0]
     df = df[df.reg_st_dt < initdf.future_reg_date()]
+
+    log(f'i.{future_date_mpans} MPAN(s) registered after {initdf.future_reg_date()} removed')
+
+    mpan_recv = df.shape[0]
 
     #remove duplicate MPAN and MSN combined
     df = df.drop_duplicates(['core_mpan','co_num'])
+
+    #to get the duplicate size with MSN and MPANs and rem
+    dup_size = mpan_recv - df.shape[0]
+    log(f'i.{dup_size} MSN(s) duplicates removed')
+
 
     #add msn column to count
     df.loc[:,'msn_count'] = df.groupby('core_mpan')['core_mpan'].transform('count')
@@ -199,12 +240,24 @@ def elec_initial_cleanse():
     #drop duplicate MPANs
     df = df.drop_duplicates(['core_mpan'])
 
+    dup_size = mpan_recv - df.shape[0] - dup_size 
+
     df= df.sort_values(['core_mpan'], ascending=False)
 
-    return mpan_recs - df.shape[0]
+    log(f'i.{dup_size} MPAN(s) duplicates removed')
+    log(f'i.{df.shape[0]} Actual MPAN(s) to process')
+
+    return None
 
 if __name__ == "__main__":
+    
+
+    initdf.get_user_details()
+
     print('Entering in Python Framework.....')
+
+
+
     log('Step 01/10 - Initialize Data Frames')
 
 
@@ -214,29 +267,30 @@ if __name__ == "__main__":
 
     #print(f'Time Taken {finish - start} seconds')
 
+    raw_data_size = df.shape[0]
+    log(f'i.{raw_data_size} MPAN(s) recorded')
     log('Step 02/10 - Clean-up Data')
- 
-    dup_size = elec_initial_cleanse()
 
-    log(f'{dup_size} Duplicates removed....')
+    #function call to remove duplicates
+    elec_initial_cleanse()
+   
 
     log('Step 03/10 - Assign Gain')
 
-    gain_size = assign_gain()
+    assign_gain()
 
-    log(f'{gain_size} Meter Gained')
-
+    
     log('Step 04/10 - Get Loss MPANs')
 
-    loss_size = get_loss()
+    get_loss()
 
-    log(f'{loss_size} MPANS Lost')
+    
 
     log('Step 05/10 - MSN Changed')
 
     meters_changed = msn_check()
 
-    log(f'{meters_changed} Meter(s) Changed')
+    log(f'i.{meters_changed} Meter(s) Changed')
 
     log('Step 06/10 - Compliance')
 

@@ -2,6 +2,7 @@
         "version": "1.0",  
         "elec_reports": {
             "elec_report_location": "esbos/",
+            "elec_report_output_location": "esbos/output/",
             "elec_esbos_raw": "elec_esbos_raw.xlsx",
             "elec_month_end": "elec_month_end.xlsx",
             "elec_previous_funnel": "previous_funnel.xlsx"

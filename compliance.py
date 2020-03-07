@@ -79,7 +79,13 @@ def no_meter_change_compliance(df):
     #Added by Mithun to be verified with Tom
     df.loc[(df['current_capability'] == 'U') & (has_d313 | profile_data), 'current_capability'] = 'AMR Compliant'
 
-    #print(df)
+    #check and raise warning if any compliance has not been identified
+    unknown = df[df['current_capability'] == 'U'].shape[0]
+    if unknown > 0:
+        log(f'w.{unknown} Old Meters Complaince not recognised')
+        log(f'i.{df.shape[0] - unknown} Old Meters Complaince registered')
+    else:
+        log(f'i.{df.shape[0]} Old Meters Complaince registered')
 
     return df
 
@@ -135,6 +141,15 @@ def meter_changed_compliance(df):
     #added by Mithun to be verified by Tom S
     #The remaining non Traditionals
     df.loc[~is_traditional, 'current_capability'] = df['previous_capability']
+
+    #check and raise warning if any compliance has not been identified
+    unknown = df[df['current_capability'] == 'U'].shape[0]
+    if unknown > 0:
+        log(f'w.{unknown} Changed Meters Complaince not recognised')
+        log(f'i.{df.shape[0] - unknown} Changed Meters Complaince registered')
+    else:
+        log(f'i.{df.shape[0]} Changed Meters Complaince registered')
+
     return df
 
 def meter_gained_compliance(df):
@@ -151,8 +166,7 @@ def meter_gained_compliance(df):
     #df.loc[(df['mtr_typ'].str.contains(smets1_mtr[0])) | (df['mtr_typ'].str.contains(smets1_mtr[1])) | (df['mtr_typ'].str.contains(smets1_mtr[2])) | (df['mtr_typ'].str.contains(smets1_mtr[3])), 'current_capability'] = 'SMETS1 Capable'
 
     #Filter column 'mtr_inst_dt' to show all installs pre 5th Dec 2018, mark these as 'SMETS1 Compliant' in the 'Current Capability' column
-    #print(type(df['mtr_inst_dt']))
-    #print(type(initdf.s1_compliant_date()))
+
     is_s1_compliant = df['mtr_inst_dt'] < pd.Timestamp(2018, 12, 5)#initdf.s1_compliant_date()
     s1_capable = df['current_capability'] == 'SMETS1 Capable'
     df.loc[is_s1_compliant & s1_capable, 'current_capability'] = 'SMETS1 Compliant'
@@ -190,42 +204,58 @@ def meter_gained_compliance(df):
 
     #pending Traditionals
     df.loc[(df['current_capability'] == 'U'), 'current_capability'] = 'Traditional'
-    #print(df)
+
+    #check and raise warning if any compliance has not been identified
+    unknown = df[df['current_capability'] == 'U'].shape[0]
+    if unknown > 0:
+        log(f'w.{unknown} Gained Meters Complaince not recognised')
+        log(f'i.{df.shape[0] - unknown} Gained Meters Complaince registered')
+    else:
+        log(f'i.{df.shape[0]} Gained Meters Complaince registered')
+
     return df
 
 def establish_meter_compliance(df):
-    log('Load Month End Capability Funnel')
+    log('i.Load Month End Capability Funnel')   
     
     month_end_df = initdf.open_month_end_df()
     month_end_df = month_end_df[[month_end_df.columns[0], 'Current Capability']]
     mpan_col = month_end_df.columns[0]
+    month_end_df = month_end_df.drop_duplicates([mpan_col])
     month_end_df.rename(columns = {mpan_col:'core_mpan'},  inplace = True)
     df = pd.merge(df, month_end_df, how='left', on=['core_mpan', 'core_mpan'])
     df.rename(columns = {'Current Capability':'previous_capability'}, inplace = 'True')
     
-    log('Load Previous Capability Funnel')
+    log('i.Load Previous Capability Funnel')
 
     prev_df = initdf.open_previous_funnel()
     prev_df = prev_df[[prev_df.columns[0], 'Current Meter']]
     mpan_col = prev_df.columns[0]
+    prev_df = prev_df.drop_duplicates([mpan_col])
     prev_df.rename(columns = {mpan_col:'core_mpan'},  inplace = True)
     df = pd.merge(df, prev_df, how='left', on=['core_mpan', 'core_mpan'])
     df.rename(columns = {'Current Meter':'funnel_capability'}, inplace = 'True')
     
-    log('reset current capability')
+    log('i.Reset current capability')
     df['current_capability'] = 'U'
     compliance_df = [None, None, None]
     
-    log('process gained meters')
+    log('i.Process gained meters')
     #for gained meters
     #Filter the 'Meter Change' column to show all meters that have #N/A value, this indicates a gained meter
     #Here 'Meter Changed' == 'Gain'
     compliance_df[0] = df[df['Meter Changed'] == 'Gain'].copy()
+
     compliance_df[0] = meter_gained_compliance(compliance_df[0])
 
-    compliance_df[0].to_csv (r'temp/gain_mpan.csv', index = None, header=True)
+    cur_date = initdf.get_current_month()
+    output_file = initdf.get_output_location() + 'GainMeterCompliance_' + cur_date[0] + cur_date[1][:3].upper() + cur_date[2] + '.csv'
+    try:
+        compliance_df[0].to_csv (output_file, index = None, header=True)
+    except:
+        log('e.Gain Compliance File could not be saved. Possible reasons access to write is restricted or the file with the same name is present and open')
     
-    log('process changed meters')
+    log('i.Process changed meters')
 
     #for changed meters
     #Filter the 'Meter Change' column to show all meters that have changed 
@@ -233,9 +263,14 @@ def establish_meter_compliance(df):
     compliance_df[1] = df[df['Meter Changed'] == 'Yes'].copy()
     compliance_df[1] = meter_changed_compliance(compliance_df[1])
 
-    compliance_df[1].to_csv (r'temp/change_mpan.csv', index = None, header=True)
+    cur_date = initdf.get_current_month()
+    output_file = initdf.get_output_location() + 'ChangedMeterCompliance_' + cur_date[0] + cur_date[1][:3].upper() + cur_date[2] + '.csv'
+    try:
+        compliance_df[1].to_csv (output_file, index = None, header=True)
+    except:
+        log('e.Changed Meter Compliance File could not be saved. Possible reasons access to write is restricted or the file with the same name is present and open')
     
-    log('process old meters')
+    log('i.Process old meters')
 
     #for same meters and no gains
     #Filter the 'Meter Change' column to show all meters that have NOT changed 
@@ -243,22 +278,35 @@ def establish_meter_compliance(df):
     compliance_df[2] = df[df['Meter Changed'] == 'No'].copy()
     compliance_df[2] = no_meter_change_compliance(compliance_df[2])
 
-    compliance_df[2].to_csv (r'temp/old_mpan.csv', index = None, header=True)
+    cur_date = initdf.get_current_month()
+    output_file = initdf.get_output_location() + 'OldMeterCompliance_' + cur_date[0] + cur_date[1][:3].upper() + cur_date[2] + '.csv'
+    try:
+        compliance_df[2].to_csv (output_file, index = None, header=True)
+    except:
+        log('e.Gain Compliance File could not be saved. Possible reasons access to write is restricted or the file with the same name is present and open')
 
-    #print(compliance_df[0])
     
-    log('stiching meters compliance together')
+    log('i.Stiching meters compliance together')
 
     df = pd.concat(compliance_df, axis=0, ignore_index=True, sort=False)
 
+    unknown = df[df['current_capability'] == 'U'].shape[0]
+    if unknown > 0:
+        log(f'w.{unknown} Overall Meters Complaince not recognised')
+        log(f'i.{df.shape[0] - unknown} Overall Meters Complaince registered')
+    else:
+        log(f'i.{df.shape[0]} Overall Meters Complaince registered')
+
     df.rename(columns = {'funnel_capability':'Funnel Capability', 'previous_capability':'Previous Capability', 'current_capability':'Current Capability'}, inplace = 'True')
     
-    log('Meter Compliance Established')
+    log('i.Meter Compliance Established')
 
+    cur_date = initdf.get_current_month()
+    output_file = initdf.get_output_location() + 'OverallCompliance_' + cur_date[0] + cur_date[1][:3].upper() + cur_date[2] + '.csv'
     try:
-        df.to_csv (r'temp/comply.csv', index = None, header=True)
+        df.to_csv (output_file, index = None, header=True)
     except:
-        pass
+        log('e.Compliance File could not be saved. Possible reasons access to write is restricted or the file with the same name is present and open')
     return df
 
 if __name__ == '__main__':

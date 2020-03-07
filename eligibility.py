@@ -142,11 +142,17 @@ def merge_previous_funnel(df):
 
     df= df.sort_values(['MPAN'], ascending=False)
 
-    try:
-        df.to_csv (r'temp/new.csv', index = None, header=True)
-    except:
-        pass
+    #output_file = initdf.get_output_location() + initdf.get_current_elec_name()
 
+    cur_date = initdf.get_current_month()
+    output_file = initdf.get_output_location() + 'CurrentElec_MonthEnd_' + cur_date[0] + cur_date[1][:3].upper() + cur_date[2] + '.csv'
+    try:
+        df.to_csv (output_file, index = None, header=True)
+    except:
+        print('Gain Compliance File could not be saved')
+
+
+    
     del prev_df
     
     return df
