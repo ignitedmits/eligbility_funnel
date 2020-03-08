@@ -13,7 +13,6 @@ def cust_type(cust_num):
     else:
         return 'Large Group'
 
-
 def create_funnel(df):
     #for unit testing
 

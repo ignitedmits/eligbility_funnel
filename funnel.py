@@ -251,11 +251,15 @@ if __name__ == "__main__":
     user_info()
 
     print('\nEntering in Python Framework.....')
-    log('Step 01/10 - Initialize Data Frames')
+    start = time.perf_counter()
+
+    log('Step 0 - Validate Configurations and Files')
 
     system.validate_json_conf()
 
-    start = time.perf_counter()
+    log('Step 01/10 - Initialize Data Frames')
+
+
     df = initdf.init_dataframe()
 
     raw_data_size = df.shape[0]

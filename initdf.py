@@ -1,10 +1,7 @@
 import pandas as pd
 import json
 import glob
-
-
 from system import log
-
 
 def open_month_end_df():
     with open('config.JSON') as config_file:

@@ -302,7 +302,6 @@ def establish_meter_compliance(df):
     df.rename(columns = {'funnel_capability':'Funnel Capability', 'previous_capability':'Previous Capability', 'current_capability':'Current Capability'}, inplace = 'True')
     
     log('i.Meter Compliance Established')
-
     cur_date = get_current_month()
     output_file = initdf.get_output_location() + 'OverallCompliance_' + cur_date[0] + cur_date[1][:3].upper() + cur_date[2] + '.csv'
     try:
