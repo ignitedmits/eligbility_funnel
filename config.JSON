@@ -1,12 +1,19 @@
     {"eligibility_funnel": {  
-        "version": "1.0",  
-        "elec_reports": {
+        "version": "1.0",
+        
+        "location":{
             "elec_report_location": "esbos/",
             "elec_report_output_location": "esbos/output/",
+            "locate_lookup": "lookup/",
+            "locate_flowdata": "flowdata/"
+        },
+
+        "elec_reports": {
             "elec_esbos_raw": "elec_esbos_raw.xlsx",
             "elec_month_end": "elec_month_end.xlsx",
             "elec_previous_funnel": "previous_funnel.xlsx"
         },
+
         "funnel_lookups": {
             "locate_lookup": "lookup/",
             "meter_type": "meter_type.xlsx",

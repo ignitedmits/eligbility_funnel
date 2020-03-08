@@ -1,7 +1,9 @@
 import pandas as pd
 import initdf
 import datetime
-from initdf import log
+import system
+from system import log, get_current_month
+
 
 def no_meter_change_compliance(df):  
     #traditional capability
@@ -248,7 +250,7 @@ def establish_meter_compliance(df):
 
     compliance_df[0] = meter_gained_compliance(compliance_df[0])
 
-    cur_date = initdf.get_current_month()
+    cur_date = get_current_month()
     output_file = initdf.get_output_location() + 'GainMeterCompliance_' + cur_date[0] + cur_date[1][:3].upper() + cur_date[2] + '.csv'
     try:
         compliance_df[0].to_csv (output_file, index = None, header=True)
@@ -263,7 +265,7 @@ def establish_meter_compliance(df):
     compliance_df[1] = df[df['Meter Changed'] == 'Yes'].copy()
     compliance_df[1] = meter_changed_compliance(compliance_df[1])
 
-    cur_date = initdf.get_current_month()
+    cur_date = get_current_month()
     output_file = initdf.get_output_location() + 'ChangedMeterCompliance_' + cur_date[0] + cur_date[1][:3].upper() + cur_date[2] + '.csv'
     try:
         compliance_df[1].to_csv (output_file, index = None, header=True)
@@ -278,7 +280,7 @@ def establish_meter_compliance(df):
     compliance_df[2] = df[df['Meter Changed'] == 'No'].copy()
     compliance_df[2] = no_meter_change_compliance(compliance_df[2])
 
-    cur_date = initdf.get_current_month()
+    cur_date = get_current_month()
     output_file = initdf.get_output_location() + 'OldMeterCompliance_' + cur_date[0] + cur_date[1][:3].upper() + cur_date[2] + '.csv'
     try:
         compliance_df[2].to_csv (output_file, index = None, header=True)
@@ -301,7 +303,7 @@ def establish_meter_compliance(df):
     
     log('i.Meter Compliance Established')
 
-    cur_date = initdf.get_current_month()
+    cur_date = get_current_month()
     output_file = initdf.get_output_location() + 'OverallCompliance_' + cur_date[0] + cur_date[1][:3].upper() + cur_date[2] + '.csv'
     try:
         df.to_csv (output_file, index = None, header=True)

@@ -1,8 +1,7 @@
 import pandas as pd
 import funnel 
 import initdf
-from initdf import log
-
+from system import log, get_current_month
 
 def cust_type(cust_num):
     if cust_num in range (1,3):
@@ -116,7 +115,7 @@ def create_funnel(df):
     log('i.Saving Month End Report')
 
     try:
-        cur_date = initdf.get_current_month()
+        cur_date = get_current_month()
         output_file = initdf.get_output_location() + 'CurrentElec_MonthEnd_' + cur_date[0] + cur_date[1][:3].upper() + cur_date[2] + '.csv'
         df.to_csv (output_file, index = None, header=True)
     except:

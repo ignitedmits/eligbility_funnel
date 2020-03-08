@@ -14,8 +14,9 @@ import compliance
 import eligibility
 import initdf
 import time
+import system
 
-from initdf import log
+from system import log, user_info
 
 
 def rejected_d10():
@@ -149,7 +150,7 @@ def assign_gain():
     #df1 = pd.read_excel('eligibility_dup.xlsx')
     df_gain = initdf.open_month_end_df()
 
-    last_mon = initdf.get_last_month(1)
+    last_mon = system.get_last_month(1)
 
     log(f'i.{df_gain.shape[0]} MPAN(s) in {last_mon} Elec Funnel')
 
@@ -185,7 +186,7 @@ def get_loss():
 
     df_loss = df_old.loc[(df_old['core_mpan'].isin(loss_mpan)), ['core_mpan','cust1_cust_nm', 'reg_st_dt']]
 
-    cur_date = initdf.get_current_month()
+    cur_date = system.get_current_month()
 
     output_file = initdf.get_output_location() + 'ChurnLoss_' + cur_date[0] + cur_date[1][:3].upper() + cur_date[2] + '.csv'
     try:
@@ -246,22 +247,16 @@ def elec_initial_cleanse():
     return None
 
 if __name__ == "__main__":
-    
 
-    initdf.get_user_details()
+    user_info()
 
-    print('Entering in Python Framework.....')
-
-
-
+    print('\nEntering in Python Framework.....')
     log('Step 01/10 - Initialize Data Frames')
 
+    system.validate_json_conf()
 
-    #start = time.perf_counter()
+    start = time.perf_counter()
     df = initdf.init_dataframe()
-    #finish = time.perf_counter()
-
-    #print(f'Time Taken {finish - start} seconds')
 
     raw_data_size = df.shape[0]
     log(f'i.{raw_data_size} MPAN(s) recorded')
@@ -269,13 +264,11 @@ if __name__ == "__main__":
 
     #function call to remove duplicates
     elec_initial_cleanse()
-   
 
     log('Step 03/10 - Assign Gain')
 
     assign_gain()
-
-    
+   
     log('Step 04/10 - Get Loss MPANs')
 
     get_loss()
@@ -306,3 +299,5 @@ if __name__ == "__main__":
 
     log('Step 10/10 - Report Completion')
     log('i.Final report created.')
+    finish = time.perf_counter()
+    log(f'The Reoprt was generated in {round(finish - start,2)} second(s)')
