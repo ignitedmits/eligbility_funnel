@@ -67,6 +67,8 @@ def validate_json_conf():
         log('e.Output folder cannot be created.\nThe program cannot run')
         quit()
 
+    log('i.All files validated. Good to go.')
+
 def log(message):
 
     log_time = time.strftime("%H:%M:%S",time.localtime())
